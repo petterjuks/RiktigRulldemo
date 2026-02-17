@@ -1,4 +1,6 @@
+// ===============================
 // Lager dopapir-objekt
+// ===============================
 function lagDopapir({
   navn,
   butikk,
@@ -25,28 +27,9 @@ function lagDopapir({
   };
 }
 
-lagDopapir({
-    navn:"test 18pk",
-    butikk: "testenms",
-    pris: 89.90,
-    meter: 123,
-    lag: 2,
-    bilde: "delicate-16pk",
-
-});
-/*lagDopapir({
-    navn: "Nytt produkt",
-    butikk: "Nyttprodukt",
-    pris: 999,
-    meter: 999,
-    lag: 3,
-    forPris: 990,
-    bilde: "images/supersoft-24pk.webp"
-  }),
-
-  */
-
-// Manuell input (din “database”)
+// ===============================
+// Database
+// ===============================
 const dopapirListe = [
   lagDopapir({
     navn: "Super Soft 24-pk",
@@ -123,7 +106,7 @@ const dopapirListe = [
 
   lagDopapir({
     navn: "Unik soft 16-pk",
-    butikk: "Spar/Eurospar",
+    butikk: "Spar",
     pris: 60,
     meter: 320,
     lag: 3,
@@ -132,102 +115,131 @@ const dopapirListe = [
   }),
 ];
 
+// ===============================
+// Global state
+// ===============================
+let bareTilbud = false;
 
-// Sortering
-dopapirListe.sort((a, b) => b.ranking - a.ranking);
-const ukensKupp = dopapirListe[0];
+// ===============================
+// Hjelpefunksjoner
+// ===============================
+function hentSortertListe() {
+  const liste = bareTilbud
+    ? dopapirListe.filter(d => d.forPris !== null)
+    : dopapirListe;
 
-// Toppliste
+  return [...liste].sort((a, b) => b.ranking - a.ranking);
+}
+
+function hentUkensKupp() {
+  const liste = hentSortertListe();
+  return liste.length > 0 ? liste[0] : null;
+}
+
+// ===============================
+// Toppliste (NY UI STRUCTURE)
+// ===============================
 function visToppliste() {
   const ul = document.getElementById("toppliste");
   ul.innerHTML = "";
 
-  dopapirListe.forEach((d, i) => {
-    const li = document.createElement("li");
+  const liste = hentSortertListe();
 
-    if (i < 3) li.classList.add(`plass-${i + 1}`);
-    if (i === 3) li.classList.add("plass-4");
-    if (i === 4) li.classList.add("plass-5");
+  liste.forEach((d, i) => {
+    const li = document.createElement("li");
+    li.classList.add("kort");
 
     const harTilbud = d.forPris !== null;
 
-    li.innerHTML = `
-      <div class="rad-topp">
+li.innerHTML = `
+  <div class="kort-wrapper">
+
+    <div class="venstre">
+      <div class="butikk-rad">
+        <span class="butikk">${d.butikk.toUpperCase()}</span>
+        ${harTilbud ? `<span class="tilbud-tag">TILBUD</span>` : ""}
+      </div>
+
+      <div class="produkt-rad">
         <span class="plass">${i + 1}.</span>
-        <span class="navn">
-        ${d.navn}
-    ${harTilbud ? `<span class="tilbud-tag">Tilbud</span>` : ""}
-        </span>
+        <span class="navn">${d.navn}</span>
       </div>
 
-      <div class="rad-bunn">
-        <span class="butikk">${d.butikk}</span>
-
-        <div class="pris-blokk">
-          ${harTilbud ? `<div class="for-pris">${d.forPris.toFixed(2)} kr</div>` : ""}
-          <div class="tilbud-linje">
-            <span class="tilbud-pris">${d.pris.toFixed(2)} kr</span>
-          </div>
-          <div>${d.prisPer100m.toFixed(2)} kr / 100 m</div>
-        </div>
+      <div class="meter">
+        ${d.prisPer100m.toFixed(2)} kr / 100m
       </div>
-
-       <div class="detaljer">
-  ${d.bilde ? `
-    <div class="produktbilde">
-      <img src="${d.bilde}" alt="${d.navn}">
     </div>
-  ` : ""}
 
-  <div class="detaljinfo">
-    <div>🧻 ${d.lag} lag</div>
-    <div>📏 ${d.meter.toFixed(1)} meter</div>
-    <div>💰 ${d.prisPer100m.toFixed(2)} kr / 100 m</div>
+    <div class="høyre">
+      ${harTilbud ? `<div class="for-pris">${d.forPris.toFixed(2)}</div>` : ""}
+      <div class="nå-pris">${d.pris.toFixed(2)}</div>
+    </div>
+
   </div>
-</div>
-    `;
 
-    li.addEventListener("click", () => {
-  // Lukk alle andre
+  <div class="detaljer">
+    ${d.bilde ? `
+      <div class="produktbilde">
+        <img src="${d.bilde}" alt="${d.navn}">
+      </div>
+    ` : ""}
+
+    <div class="detaljinfo">
+      <div>🧻 ${d.lag} lag</div>
+      <div>📏 ${d.meter.toFixed(1)} meter</div>
+      <div>💰 ${d.prisPer100m.toFixed(2)} kr / 100m</div>
+    </div>
+  </div>
+`;
+
+li.addEventListener("click", () => {
   document.querySelectorAll("#toppliste li").forEach(el => {
     if (el !== li) el.classList.remove("åpen");
   });
 
-  // Toggle denne
   li.classList.toggle("åpen");
 });
+
 
 
     ul.appendChild(li);
   });
 }
 
-// Ukens kupp
+// ===============================
+// Ukens beste kjøp
+// ===============================
 function visUkensKupp() {
-  document.getElementById("ukens-kupp").innerHTML = `
+  const ukensKupp = hentUkensKupp();
+  const container = document.getElementById("ukens-kupp");
+
+  if (!ukensKupp) {
+    container.innerHTML = "<div>Ingen produkter funnet</div>";
+    return;
+  }
+
+  const harTilbud = ukensKupp.forPris !== null;
+
+  container.innerHTML = `
     <div class="ukens-wrapper">
 
-      ${ukensKupp.bilde ? `
-        <div class="ukens-bilde">
-          <img src="${ukensKupp.bilde}" alt="${ukensKupp.navn}" loading="lazy">
-        </div>
-      ` : ""}
-
-      <div class="ukens-innhold">
-        <div class="ukens-label">Ukens beste kjøp</div>
-
+      <div class="ukens-venstre">
+        <div class="ukens-label">UKENS BESTE KJØP</div>
         <div class="ukens-navn">${ukensKupp.navn}</div>
-        <div class="ukens-butikk">${ukensKupp.butikk}</div>
+        <div class="ukens-butikk">${ukensKupp.butikk.toUpperCase()}</div>
 
-        <div class="ukens-metrics">
-          <div>
-            <strong>${ukensKupp.prisPer100m.toFixed(2)}</strong>
-            <span>kr / 100 m</span>
+        ${ukensKupp.bilde ? `
+          <div class="ukens-bilde">
+            <img src="${ukensKupp.bilde}" alt="${ukensKupp.navn}">
           </div>
-          <div>
-            <strong>${ukensKupp.lag}</strong>
-            <span>lag</span>
-          </div>
+        ` : ""}
+      </div>
+
+      <div class="ukens-høyre">
+        ${harTilbud ? `<div class="for-pris">${ukensKupp.forPris.toFixed(2)}</div>` : ""}
+        <div class="nå-pris">${ukensKupp.pris.toFixed(2)}</div>
+        <div class="meter">
+          ${ukensKupp.prisPer100m.toFixed(2)} kr / 100m
         </div>
       </div>
 
@@ -235,19 +247,34 @@ function visUkensKupp() {
   `;
 }
 
-
+// ===============================
 // Sist oppdatert
+// ===============================
 function visSistOppdatert() {
   const dato = new Date().toLocaleDateString("no-NO", {
     day: "numeric",
     month: "long",
     year: "numeric"
   });
+
   document.getElementById("sist-oppdatert").innerText =
     `Sist oppdatert: ${dato}`;
 }
 
+// ===============================
+// Toggle knapp
+// ===============================
+document.getElementById("tilbudToggle")?.addEventListener("click", function () {
+  bareTilbud = !bareTilbud;
+  this.classList.toggle("aktiv");
+
+  visToppliste();
+  visUkensKupp();
+});
+
+// ===============================
 // Init
+// ===============================
 visToppliste();
 visUkensKupp();
 visSistOppdatert();
