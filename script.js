@@ -70,8 +70,7 @@ const dopapirListe = [
   lagDopapir({
     navn: "Lambi 16-pk",
     butikk: "Europris",
-    pris: 60,
-    forPris: 79.90,
+    pris: 79.90,
     meter: 300.8,
     lag: 3,
     bilde: "images/lambi-16pk.webp"
@@ -107,12 +106,21 @@ const dopapirListe = [
   lagDopapir({
     navn: "Unik soft 16-pk",
     butikk: "Spar",
-    pris: 60,
+    pris: 79.90,
     meter: 320,
     lag: 3,
-    forPris: 79.90,
     bilde: "images/unik-16pk.webp"
   }),
+
+  lagDopapir({
+    navn: "Toalettpapir 24-pk",
+    butikk: "REMA 1000",
+    pris: 117.90,
+    meter: 458.4,
+    lag: 3,
+    bilde: "images/toalettpapir-24pk"
+  }),
+
 ];
 
 // ===============================
