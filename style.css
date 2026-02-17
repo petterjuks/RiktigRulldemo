@@ -101,7 +101,6 @@ body {
   justify-content: flex-end;
    align-items: center; /* sentrer innhold horisontalt */
   text-align: center;  /* sentrer tekst */
-  margin-bottom: 2rem;
 }
 
 .ukens-høyre .for-pris {
@@ -277,4 +276,3 @@ body {
 html {
   scroll-behavior: smooth;
 }
-
