@@ -1,142 +1,128 @@
-/* =========================
-   Grunnoppsett – mobil only
-   ========================= */
+/* ===================================
+   Base
+=================================== */
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
-               "SF Pro Display", system-ui, sans-serif;
-  background: #f2f4f7;
+               system-ui, sans-serif;
+  background: #f8f8f8;
   margin: 0;
   padding: 1rem;
-  font-weight: 400;
+  color: #111;
+  font-size: 16px; /* Standard app-tekst */
 }
 
-strong {
-  font-weight: 600;
-}
-
-h1, h2 {
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-/* App-container */
 .app {
-  max-width: 390px;
+  max-width: 420px;
   margin: 0 auto;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  padding: 1.25rem;
-}
-
-/* =========================
-   Header
-   ========================= */
-.header {
-  text-align: center;
-  padding: 0.75rem 0 1.25rem;
-  margin-bottom: 1.5rem;
-   position: sticky;
-  top: 0;
-  background: #fff;
-  z-index: 10;
- 
 }
 
 
-.logo {
-  margin: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+/* ===================================
+   Toggle knapp
+=================================== */
+
+.filter-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
 }
 
-
-.tagline {
-  margin-top: 0.25rem;
-  font-size: 0.85rem;
-  color: #6b7280;
+.filter-knapp {
+  background: #919191;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem; /* Litt større knapptekst */
+  transition: background 0.3s, color 0.3s;
+  font-weight: 500;
+  color: #111;
 }
 
+.filter-knapp.aktiv {
+  background: #d8d8d8;
+  color: #000000;
+}
 
-/* =========================
+/* ===================================
    Ukens beste kjøp
-   ========================= */
+=================================== */
+
 #ukens-kupp {
-  background: linear-gradient(180deg, #ffffff, #f9fafb);
-  border-radius: 16px;
-  padding: 1.4rem;
-  margin-bottom: 1.75rem;
-  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 1.8rem;
+  margin-bottom: 1.5rem;
 }
 
 .ukens-wrapper {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.5rem;
+  align-items: stretch;
 }
 
-.ukens-innhold {
-  order: 1;
-}
-
-.ukens-bilde {
-  order: 2;
-  flex-shrink: 0;
-}
-
-.ukens-bilde img {
-  width: 100%;
-  max-width: 120px;
-  height: auto;
-  border-radius: 12px;
-  object-fit: contain;
-  background: #fff;
-}
-
-.ukens-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6b7280;
-  margin-bottom: 0.4rem;
-}
-
-.ukens-navn {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 0.1rem;
-}
-
-.ukens-butikk {
-  font-size: 0.95rem;
-  color: #6b7280;
-  margin-bottom: 0.75rem;
-}
-
-.ukens-metrics {
-  display: flex;
-  gap: 1.75rem;
-}
-
-.ukens-metrics div {
+.ukens-venstre {
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.ukens-metrics strong {
-  font-size: 1.5rem;
+.ukens-label {
+  font-size: 1.5rem; /* Standard app-label */
 }
 
-.ukens-metrics span {
-  font-size: 0.8rem;
-  color: #6b7280;
+.ukens-navn {
+  font-size: 1.3rem; /* Hovedproduktnavn */
 }
 
-/* =========================
-   Toppliste
-   ========================= */
+.ukens-butikk {
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.ukens-bilde {
+  margin-top: auto;
+}
+
+.ukens-bilde img {
+  width: 100%;
+  max-width: 200px;
+}
+
+.ukens-høyre {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+   align-items: center; /* sentrer innhold horisontalt */
+  text-align: center;  /* sentrer tekst */
+}
+
+.ukens-høyre .for-pris {
+  text-decoration: line-through;
+  color: #ff3b30;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: -0.3rem;
+}
+
+.ukens-høyre .nå-pris {
+  font-size: 1.4rem;
+  font-weight: 500;
+  
+}
+
+.ukens-høyre .meter {
+  font-size: 1.05rem;
+  letter-spacing: -0.025rem;
+  font-weight: 500;
+}
+
+/* ===================================
+   Toppliste kort
+=================================== */
+
 #toppliste {
   list-style: none;
   padding: 0;
@@ -144,164 +130,139 @@ h1, h2 {
 }
 
 #toppliste li {
-  background: linear-gradient(180deg, #ffffff, #f9fafb);
-  padding: 1.1rem;
-  border-radius: 16px;
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
-  cursor: pointer;
-
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-
-  transition:
-    background 0.2s ease,
-    transform 0.12s ease,
-    box-shadow 0.12s ease;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
+/* Kort layout */
 
-#toppliste li:active {
-  transform: scale(0.985);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-
-/* Rangering */
-#toppliste li.plass-1,
-#toppliste li.plass-2,
-#toppliste li.plass-3 {
-  background: #c6fad5;
-  font-weight: 600;
-}
-
-#toppliste li.plass-4,
-#toppliste li.plass-5 {
-  background: #ffeeb7;
-}
-
-/* =========================
-   Liste-innhold
-   ========================= */
-.rad-topp {
-  display: flex;
-  gap: 0.5rem;
-  font-weight: 600;
-  font-size: 1.05rem;
-  line-height: 1.3;
-}
-
-.plass {
-  flex-shrink: 0;
-  color: #555;
-}
-
-.navn {
-  word-break: break-word;
-}
-
-.rad-bunn {
+.kort-wrapper {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-top: 0.3rem;
-  font-size: 0.8rem;
-  color: #666;
-  gap: 0.5rem;
+  align-items: center;
+}
+
+.venstre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* Butikk + tilbud */
+
+.butikk-rad {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  margin-top: 0.2rem;
+   margin-left: 1.5rem; /* sett samme bredde som .plass */
 }
 
 .butikk {
-  color: #777;
-  flex-shrink: 0;
-  font-size: 0.9rem;
-
-}
-
-/* Pris */
-.pris-blokk {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.1rem;
-}
-
-.for-pris {
-  text-decoration: line-through;
-  color: #777;
   font-size: 0.8rem;
-}
-
-.tilbud-pris {
-  color: #000;
-  font-weight: 600;
-  font-size: 1.05rem;
+  letter-spacing: 0.08em;
 }
 
 .tilbud-tag {
-  background: #ff9a9a;
-  color: #fff;
-  font-size: 0.65rem;
-  padding: 0.15rem 0.35rem;
+  background: #ff5757;
+  color: rgb(0, 0, 0);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.45rem;
   border-radius: 4px;
-  margin-left: 0.4rem;
-  text-transform: uppercase;
+}
+
+/* Produkt */
+
+.produkt-rad + .meter {
+  display: block;       /* Sørg for at den ligger på egen linje */
+  margin-left: 1.7rem;  /* Linjer opp med navnet (ikke nummeret) */
+  
+  font-size: 0.85rem;
+  color: #333;
+}
+
+/* Nummeret står først */
+.plass {
+  font-size: 1.3rem;
+  font-weight: 500;
+  flex-shrink: 0;
+  padding-right: 0.5rem;
+}
+
+/* Navnet får sin egen kolonne */
+.navn {
+  font-size: 1.3rem;
+  font-weight: 400;
+  flex: 1;
+}
+
+/* Pris per meter */
+
+.meter {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+/* Høyre prisblokk */
+
+.høyre {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.høyre .for-pris {
+  text-decoration: line-through;
+  color: #ff5757;
+  font-size: 0.95rem;
+}
+
+.høyre .nå-pris {
+  font-size: 1.3rem;
+  font-weight: 400;
+}
+
+/* ===================================
+   Sist oppdatert
+=================================== */
+
+#sist-oppdatert {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: #777;
 }
 
 /* =========================
-   Detaljvisning (mobil)
-   ========================= */
+   Detaljvisning
+========================= */
+
 .detaljer {
   overflow: hidden;
   max-height: 0;
   opacity: 0;
-  transform: translateY(-4px);
-
-  transition:
-    max-height 0.35s ease,
-    opacity 0.25s ease,
-    transform 0.25s ease;
-
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-
+  transition: all 0.35s ease;
   margin-top: 0;
-  padding-top: 0;
-  border-top: 1px solid rgba(0,0,0,0.1);
 }
 
 #toppliste li.åpen .detaljer {
   max-height: 500px;
   opacity: 1;
-  transform: translateY(0);
-
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
+  margin-top: 1rem;
 }
 
 .produktbilde img {
   width: 100%;
   max-width: 180px;
-  margin: 0 auto;
+  margin: 1rem auto;
   display: block;
-  border-radius: 12px;
-  object-fit: contain;
-  background: #fff;
 }
 
 .detaljinfo {
   display: grid;
-  row-gap: 0.3rem;
-  font-size: 0.85rem;
-  color: #444;
-}
-
-/* =========================
-   Sist oppdatert
-   ========================= */
-#sist-oppdatert {
-  text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.8rem;
-  color: #777;
+  gap: 0.35rem;
+  font-size: 0.9rem;
 }
