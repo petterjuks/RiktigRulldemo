@@ -1,367 +1,477 @@
-/* ===================================
-   Base
-=================================== */
+// ===============================
+// Konfig
+// ===============================
+const SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuKd8HZGg_vIEwLb0phrIq6-4qLo_ZkFLbOXCwoWSy0LHoC0MFyp6KWeJldIW8BcB9E7Y8cAa5hkxU/pub?output=csv";
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
-               system-ui, sans-serif;
-  background: #f2f2f2;
-  margin: 0;
-  padding: 1rem;
-  color: #111;
-  font-size: 16px; /* Standard app-tekst */
+// Sett til false før lansering
+let visScoreDebug = true;
+
+// ===============================
+// Global state
+// ===============================
+let dopapirListe = [];
+let bareTilbud = false;
+
+// ===============================
+// Lager dopapir-objekt
+// ===============================
+function lagDopapir({
+  navn,
+  butikk,
+  pris,
+  meter,              // total meter i pakken
+  lag,
+  ruller = null,      // anbefalt
+  arkPerRull = null,  // valgfritt
+  vektPerRullG = null,// valgfritt
+  forPris = null,
+  bilde = null
+}) {
+  const prisPerMeter = pris / meter;
+  const prisPer100m = prisPerMeter * 100;
+
+  const meterPerRull = ruller ? (meter / ruller) : null;
+  const prisPerRull = ruller ? (pris / ruller) : null;
+
+  const rabattProsent = (forPris && forPris > pris)
+    ? (forPris - pris) / forPris
+    : 0;
+
+  return {
+    navn,
+    butikk,
+    pris,
+    forPris,
+    meter,
+    lag,
+    ruller,
+    arkPerRull,
+    vektPerRullG,
+    meterPerRull,
+    prisPerRull,
+    prisPer100m,
+    rabattProsent,
+    valueScore: 0,
+    dealScore: 0,
+    bilde
+  };
 }
 
-.app {
-  max-width: 100vw;
-  margin: 0 auto;
-  padding: 0.4rem;
-}
+// ===============================
+// Score-beregning
+// ===============================
+function beregnScores(liste) {
+  const maxOf = (arr, fn) => {
+    let m = 0;
+    for (const x of arr) {
+      const v = fn(x);
+      if (v !== null && v !== undefined && Number.isFinite(v)) {
+        if (v > m) m = v;
+      }
+    }
+    return m || 1;
+  };
 
+  const safe01 = (x) => (Number.isFinite(x) ? x : null);
 
-/* ===================================
-   Toggle knapp
-=================================== */
+  const maxMeterPerKrone = maxOf(liste, d => d.meter / d.pris);
+  const maxMeterPerRull  = maxOf(liste, d => d.meterPerRull);
+  const maxLag           = maxOf(liste, d => d.lag);
+  const maxArkPerRull    = maxOf(liste, d => d.arkPerRull);
+  const maxVektPerRull   = maxOf(liste, d => d.vektPerRullG);
+  const maxRabatt        = maxOf(liste, d => d.rabattProsent);
 
-.filter-bar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-}
+  // Vekter
+  const WEIGHTS_VALUE = {
+    meterPerKrone: 0.80,
+    meterPerRull:  0.10,
+    lag:           0.08,
+    arkPerRull:    0.02,
+    vektPerRull:   0.00
+  };
 
-.filter-knapp {
-  background: #cacaca;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-size: 0.9rem; /* Litt større knapptekst */
-  transition: background 0.3s, color 0.3s;
-  font-weight: 500;
-  color: #111;
-  -webkit-tap-highlight-color: transparent;
+  const WEIGHTS_DEAL = {
+    value:  0.35,
+    rabatt: 0.65
+  };
 
-}
+  for (const d of liste) {
+    const parts = {
+      meterPerKrone: safe01((d.meter / d.pris) / maxMeterPerKrone),
+      meterPerRull:  d.meterPerRull ? safe01(d.meterPerRull / maxMeterPerRull) : null,
+      lag:           safe01(d.lag / maxLag),
+      arkPerRull:    (d.arkPerRull !== null) ? safe01(d.arkPerRull / maxArkPerRull) : null,
+      vektPerRull:   (d.vektPerRullG !== null) ? safe01(d.vektPerRullG / maxVektPerRull) : null
+    };
 
-.filter-knapp.aktiv {
-  background: #616161;
-  color: #c7c7c7;
-}
+    let weightSum = 0;
+    for (const key of Object.keys(WEIGHTS_VALUE)) {
+      if (parts[key] !== null) weightSum += WEIGHTS_VALUE[key];
+    }
+    if (weightSum === 0) weightSum = 1;
 
-/* ===================================
-   Ukens beste kjøp
-=================================== */
+    let valueScore = 0;
+    for (const key of Object.keys(WEIGHTS_VALUE)) {
+      if (parts[key] !== null) {
+        valueScore += (WEIGHTS_VALUE[key] / weightSum) * parts[key];
+      }
+    }
 
-#ukens-kupp {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 1.8rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.05);
-}
+    const rabattScore = maxRabatt ? (d.rabattProsent / maxRabatt) : 0;
 
-.ukens-wrapper {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5rem;
-  align-items: stretch;
-}
+    const dealScore =
+      WEIGHTS_DEAL.value * valueScore +
+      WEIGHTS_DEAL.rabatt * rabattScore;
 
-.ukens-venstre {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.ukens-label {
-  font-size: 1.5rem; /* Standard app-label */
-}
-
-.ukens-navn {
-  font-size: 1.3rem; /* Hovedproduktnavn */
-}
-
-.ukens-butikk {
-  font-size: 1rem;
-  margin-bottom: 0.8rem;
-}
-
-.ukens-bilde {
-  margin-top: auto;
-}
-
-.ukens-bilde img {
-  width: 100%;
-  max-width: 200px;
-}
-
-.ukens-høyre {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-   align-items: center; /* sentrer innhold horisontalt */
-  text-align: center;  /* sentrer tekst */
-}
-
-.ukens-høyre .for-pris {
-  text-decoration: line-through;
-  color: #ff3b30;
-  font-size: 1.2rem;
-  font-weight: 500;
-  margin-bottom: -0.3rem;
-}
-
-.ukens-høyre .nå-pris {
-  font-size: 1.5rem;
-  font-weight: 500;
-  
-}
-
-.ukens-høyre .meter {
-  font-size: 1.1rem;
-  letter-spacing: -0.025rem;
-  font-weight: 500;
-}
-
-/* ===================================
-   Toppliste kort
-=================================== */
-
-#toppliste {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#toppliste li {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-/* Kort layout */
-
-.kort-wrapper {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.venstre {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-/* Butikk + tilbud */
-
-.butikk-rad {
-  display: flex;
-  gap: 0.6rem;
-  align-items: baseline;
-  margin-top: 0.2rem;
-   margin-left: 1.7rem; /* sett samme bredde som .plass */
-}
-
-.butikk {
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-}
-
-.tilbud-tag {
-  background: #ff5757;
-  color: rgb(0, 0, 0);
-  font-size: 0.7rem;
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
-}
-
-/* Produkt */
-
-.produkt-rad + .meter {
-  display: block;       /* Sørg for at den ligger på egen linje */
-  margin-left: 1.7rem;  /* Linjer opp med navnet (ikke nummeret) */
-  
-  font-size: 0.85rem;
-  color: #333;
-}
-
-/* Nummeret står først */
-.plass {
-  font-size: 1.3rem;
-  font-weight: 500;
-  flex-shrink: 0;
-  padding-right: 0.5rem;
-}
-
-/* Navnet får sin egen kolonne */
-.navn {
-  font-size: 1.3rem;
-  font-weight: 400;
-  flex: 1;
-}
-
-/* Pris per meter */
-
-.meter {
-  font-size: 0.85rem;
-  color: #333;
-}
-
-/* Høyre prisblokk */
-
-.høyre {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.høyre .for-pris {
-  text-decoration: line-through;
-  color: #ff5757;
-  font-size: 0.95rem;
-}
-
-.høyre .nå-pris {
-  font-size: 1.3rem;
-  font-weight: 400;
-}
-
-/* ===================================
-   Sist oppdatert
-=================================== */
-
-#sist-oppdatert {
-  text-align: center;
-  margin-top: 2rem;
-  font-size: 0.8rem;
-  color: #777;
-}
-
-/* =========================
-   Detaljvisning
-========================= */
-
-.detaljer {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition: all 0.35s ease;
-  margin-top: 0;
-}
-
-#toppliste li.åpen .detaljer {
-  max-height: 500px;
-  opacity: 1;
-  margin-top: 1rem;
-}
-
-
-
-.produktbilde img {
-  width: 100%;
-  max-width: 180px;
-  margin: 1rem auto;
-  display: block;
-}
-
-.detaljinfo {
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.9rem;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* Skjul scrollbar i Safari / iOS */
-body::-webkit-scrollbar {
-  display: none;
-}
-
-/* Skjul scrollbar i andre nettlesere */
-body {
-  -ms-overflow-style: none;  /* IE/Edge */
-  scrollbar-width: none;     /* Firefox */
-}
-
-.detaljinfo {
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.9rem;
-}
-
-@media (min-width: 380px) {
-  .detaljinfo {
-    grid-template-columns: 1fr 1fr;
+    d.valueScore = Number.isFinite(valueScore) ? valueScore : 0;
+    d.dealScore = Number.isFinite(dealScore) ? dealScore : 0;
   }
+
+  return liste;
 }
 
-
-/* Tabell-aktig detaljkort */
-
-.detaljinfo {
-  display: block;
+// ===============================
+// Sheets -> CSV parsing
+// ===============================
+function toNumberOrNull(x) {
+  if (x === undefined || x === null) return null;
+  const s = String(x).trim().replace(/\s/g, "").replace(",", ".");
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
 }
 
-.spec-table {
-  display: grid;
-  gap: 0;
-  border-radius: 12px;
-  overflow: hidden;
+function parseCSV(text) {
+  // Fjern BOM om den finnes
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+  // Autodetekter delimiter
+  const firstLine = text.split(/\r?\n/)[0] || "";
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const semiCount  = (firstLine.match(/;/g) || []).length;
+  const delimiter = semiCount > commaCount ? ";" : ",";
+
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+
+    if (c === '"' && inQuotes && next === '"') {
+      cur += '"';
+      i++;
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (c === delimiter && !inQuotes) {
+      row.push(cur);
+      cur = "";
+      continue;
+    }
+    if ((c === "\n" || c === "\r") && !inQuotes) {
+      if (cur.length || row.length) {
+        row.push(cur);
+        rows.push(row);
+      }
+      cur = "";
+      row = [];
+      if (c === "\r" && next === "\n") i++;
+      continue;
+    }
+    cur += c;
+  }
+  if (cur.length || row.length) {
+    row.push(cur);
+    rows.push(row);
+  }
+
+  return rows;
 }
 
-.spec-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  padding: 0.65rem 0.75rem;
-  border-top: 1px solid rgba(0,0,0,0.08);
-  font-size: 0.95rem;
+async function lastInnProdukterFraSheet() {
+  const res = await fetch(`${SHEET_CSV_URL}&t=${Date.now()}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Klarte ikke hente CSV fra Google Sheets");
+  const csvText = await res.text();
+
+  const grid = parseCSV(csvText).filter(r => r.some(cell => String(cell).trim() !== ""));
+  if (grid.length < 2) {
+    dopapirListe = [];
+    return;
+  }
+
+  const headers = grid[0].map(h => String(h).trim());
+  const dataRows = grid.slice(1);
+
+  dopapirListe = dataRows
+    .map(r => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = (r[i] ?? "").trim());
+      return obj;
+    })
+    .filter(r => r.navn && r.butikk)
+    .map(r => lagDopapir({
+      navn: String(r.navn).trim(),
+      butikk: String(r.butikk).trim(),
+      pris: toNumberOrNull(r.pris),
+      forPris: toNumberOrNull(r.forPris),
+      meter: toNumberOrNull(r.meter),
+      lag: toNumberOrNull(r.lag),
+      ruller: toNumberOrNull(r.ruller),
+      arkPerRull: toNumberOrNull(r.arkPerRull),
+      vektPerRullG: toNumberOrNull(r.vektPerRullG),
+      bilde: r.bilde ? String(r.bilde).trim() : null
+    }))
+    .filter(d => d.pris !== null && d.meter !== null && d.lag !== null);
+
+  // ✅ DENNE var det du manglet:
+  beregnScores(dopapirListe);
 }
 
-.spec-row:first-child {
-  border-top: none;
+// ===============================
+// Hjelpefunksjoner (sortering/valg)
+// ===============================
+function erTilbud(d) {
+  return d.forPris !== null && d.forPris > d.pris;
 }
 
-.spec-label {
-  color: #444;
+function hentSortertListe() {
+  const liste = bareTilbud
+    ? dopapirListe.filter(erTilbud)
+    : dopapirListe;
+
+  return [...liste].sort((a, b) => (b.valueScore - a.valueScore));
 }
 
-.spec-value {
-  color: #111;
-  font-weight: 500;
-  text-align: right;
-  white-space: nowrap;
+function hentUkensKupp() {
+  const liste = bareTilbud
+    ? dopapirListe.filter(erTilbud)
+    : dopapirListe;
+
+  const sortert = [...liste].sort((a, b) => (b.dealScore - a.dealScore));
+  return sortert.length ? sortert[0] : null;
 }
 
-/* Divider mellom seksjoner */
-.spec-divider {
-  height: 1px;
-  background: rgba(0,0,0,0.12);
-  margin: 0.75rem 0;
+// ===============================
+// UI: Toppliste
+// ===============================
+function visToppliste() {
+  const ul = document.getElementById("toppliste");
+  ul.innerHTML = "";
+
+  const liste = hentSortertListe();
+
+  liste.forEach((d, i) => {
+    const li = document.createElement("li");
+    li.classList.add("kort");
+
+    const harTilbud = erTilbud(d);
+
+    li.innerHTML = `
+      <div class="kort-wrapper">
+        <div class="venstre">
+          <div class="butikk-rad">
+            <span class="butikk">${d.butikk.toUpperCase()}</span>
+            ${harTilbud ? `<span class="tilbud-tag">TILBUD</span>` : ""}
+          </div>
+
+          <div class="produkt-rad">
+            <span class="plass">${i + 1}.</span>
+            <span class="navn">${d.navn}</span>
+          </div>
+
+          <div class="meter">
+            ${d.prisPer100m.toFixed(2)} kr / 100m
+          </div>
+        </div>
+
+        <div class="høyre">
+          ${harTilbud ? `<div class="for-pris">${d.forPris.toFixed(2)}</div>` : ""}
+          <div class="nå-pris">${d.pris.toFixed(2)}</div>
+        </div>
+      </div>
+
+      <div class="detaljer">
+        ${d.bilde ? `
+          <div class="produktbilde">
+            <img src="${d.bilde}" alt="${d.navn}" loading="lazy">
+          </div>
+        ` : ""}
+
+        <div class="detaljinfo">
+          <div class="spec-table">
+            <div class="spec-row">
+              <span class="spec-label">Lag</span>
+              <span class="spec-value">${d.lag}</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Ruller</span>
+              <span class="spec-value">${d.ruller ?? "-"}</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Totalt</span>
+              <span class="spec-value">${d.meter.toFixed(1)} m</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Pris</span>
+              <span class="spec-value">${d.prisPer100m.toFixed(2)} kr / 100m</span>
+            </div>
+          </div>
+
+          <div class="spec-divider"></div>
+
+          <div class="spec-table">
+            ${d.meterPerRull ? `
+              <div class="spec-row">
+                <span class="spec-label">Meter / rull</span>
+                <span class="spec-value">${d.meterPerRull.toFixed(1)} m</span>
+              </div>
+            ` : ""}
+
+            ${d.prisPerRull ? `
+              <div class="spec-row">
+                <span class="spec-label">Pris / rull</span>
+                <span class="spec-value">${d.prisPerRull.toFixed(2)} kr</span>
+              </div>
+            ` : ""}
+
+            ${d.arkPerRull !== null ? `
+              <div class="spec-row">
+                <span class="spec-label">Ark / rull</span>
+                <span class="spec-value">${d.arkPerRull}</span>
+              </div>
+            ` : ""}
+
+            ${d.vektPerRullG !== null ? `
+              <div class="spec-row">
+                <span class="spec-label">Vekt / rull</span>
+                <span class="spec-value">${d.vektPerRullG} g</span>
+              </div>
+            ` : ""}
+          </div>
+
+          ${visScoreDebug ? `
+            <div class="score-debug">
+              <div>Value score: ${d.valueScore.toFixed(3)}</div>
+              <div>Deal score: ${d.dealScore.toFixed(3)}</div>
+            </div>
+          ` : ""}
+        </div>
+      </div>
+    `;
+
+    li.addEventListener("click", () => {
+      document.querySelectorAll("#toppliste li").forEach(el => {
+        if (el !== li) el.classList.remove("åpen");
+      });
+
+      li.classList.toggle("åpen");
+
+      // Vibrasjon fungerer på Android, ikke på iOS (ok å ha uansett)
+      if (navigator.vibrate) navigator.vibrate(30);
+    });
+
+    ul.appendChild(li);
+  });
 }
 
-.score-debug {
-  margin-top: 0.75rem;
-  padding-top: 0.5rem;
-  border-top: 1px dashed rgba(0,0,0,0.15);
-  font-size: 0.75rem;
-  color: #888;
-  display: flex;
-  justify-content: space-between;
+// ===============================
+// UI: Ukens kupp
+// ===============================
+function visUkensKupp() {
+  const ukensKupp = hentUkensKupp();
+  const container = document.getElementById("ukens-kupp");
+
+  if (!ukensKupp) {
+    container.innerHTML = "<div>Ingen produkter funnet</div>";
+    return;
+  }
+
+  const harTilbud = erTilbud(ukensKupp);
+
+  container.innerHTML = `
+    <div class="ukens-wrapper">
+      <div class="ukens-venstre">
+        <div class="ukens-label">UKENS KUPP</div>
+        <div class="ukens-navn">${ukensKupp.navn}</div>
+        <div class="ukens-butikk">${ukensKupp.butikk.toUpperCase()}</div>
+
+        ${ukensKupp.bilde ? `
+          <div class="ukens-bilde">
+            <img src="${ukensKupp.bilde}" alt="${ukensKupp.navn}">
+          </div>
+        ` : ""}
+      </div>
+
+      <div class="ukens-høyre">
+        ${harTilbud ? `
+          <div class="rabatt-badge">
+            -${(ukensKupp.rabattProsent * 100).toFixed(0)}%
+          </div>
+        ` : ""}
+
+        ${harTilbud ? `
+          <div class="for-pris">
+            ${ukensKupp.forPris.toFixed(2)} kr
+          </div>
+        ` : ""}
+
+        <div class="nå-pris">
+          ${ukensKupp.pris.toFixed(2)} kr
+        </div>
+
+        <div class="meter">
+          ${ukensKupp.prisPer100m.toFixed(2)} kr / 100m
+        </div>
+      </div>
+    </div>
+  `;
 }
 
-.rabatt-badge {
-  background: #ff5757;
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.3rem 0.6rem;
-  border-radius: 999px;
-  margin-bottom: 0.5rem;
-  display: inline-block;
+// ===============================
+// Sist oppdatert
+// ===============================
+function visSistOppdatert() {
+  const dato = new Date().toLocaleDateString("no-NO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+
+  document.getElementById("sist-oppdatert").innerText =
+    `Sist oppdatert: ${dato}`;
 }
+
+// ===============================
+// Toggle knapp
+// ===============================
+document.getElementById("tilbudToggle")?.addEventListener("click", function () {
+  bareTilbud = !bareTilbud;
+  this.classList.toggle("aktiv");
+
+  visToppliste();
+  visUkensKupp();
+});
+
+// ===============================
+// Init (Sheets-basert)
+// ===============================
+(async function init() {
+  try {
+    await lastInnProdukterFraSheet();
+  } catch (e) {
+    console.error(e);
+    document.getElementById("ukens-kupp").innerHTML =
+      "<div>Klarte ikke hente produkter akkurat nå.</div>";
+  }
+
+  visToppliste();
+  visUkensKupp();
+  visSistOppdatert();
+})();
