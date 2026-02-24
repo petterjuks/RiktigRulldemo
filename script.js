@@ -82,6 +82,8 @@ function beregnScores(liste) {
   const maxVektPerRull   = maxOf(liste, d => d.vektPerRullG);
   const maxRabatt        = maxOf(liste, d => d.rabattProsent);
 
+
+    //Vekting
   // Vekter
   const WEIGHTS_VALUE = {
     meterPerKrone: 0.80,
@@ -398,15 +400,18 @@ function visUkensKupp() {
   container.innerHTML = `
     <div class="ukens-wrapper">
       <div class="ukens-venstre">
-        <div class="ukens-label">UKENS KUPP</div>
-        <div class="ukens-navn">${ukensKupp.navn}</div>
-        <div class="ukens-butikk">${ukensKupp.butikk.toUpperCase()}</div>
 
         ${ukensKupp.bilde ? `
           <div class="ukens-bilde">
             <img src="${ukensKupp.bilde}" alt="${ukensKupp.navn}">
           </div>
         ` : ""}
+
+        <div class="ukens-label">UKENS KUPP</div>
+        <div class="ukens-navn">${ukensKupp.navn}</div>
+        <div class="ukens-butikk">${ukensKupp.butikk.toUpperCase()}</div>
+
+       
       </div>
 
       <div class="ukens-høyre">
