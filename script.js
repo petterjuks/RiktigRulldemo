@@ -94,8 +94,8 @@ function beregnScores(liste) {
   };
 
   const WEIGHTS_DEAL = {
-    value:  0.35,
-    rabatt: 0.65
+    value:  0.60,
+    rabatt: 0.40
   };
 
   for (const d of liste) {

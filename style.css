@@ -272,8 +272,11 @@ padding-top: env(safe-area-inset-top);
   border-radius: 4px;
 }
 
+
+/*width margin fra venstre side av tallet*/
+
 .plass{
-  width: 1.8rem;
+  width: 1rem;
   text-align: right;
   flex-shrink: 0;
   margin-right: 0.5rem;
@@ -412,13 +415,13 @@ padding-top: env(safe-area-inset-top);
 
 .title{
   margin: 0;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 500;
 }
 
 .tagline{
   margin: 0px 0 0;
-  font-size: 14px;
+  font-size: 16px;
   opacity: 0.6;
 }
 
