@@ -33,6 +33,7 @@ body::-webkit-scrollbar{ display:none; } /* Safari/Chrome */
   max-width: 100vw;
   margin: 0 auto;
   padding: 0.4rem;
+  margin-bottom: 1rem;
 }
 
 /* ===================================
@@ -143,7 +144,7 @@ padding-top: env(safe-area-inset-top);
   background: var(--card);
   border-radius: var(--radius);
   padding: 2rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   box-shadow: var(--shadow);
 }
 
@@ -256,7 +257,7 @@ padding-top: env(safe-area-inset-top);
   display: flex;
   gap: 0.6rem;
   align-items: baseline;
-  margin-left: 2.7rem;  /* samme som plass + margin */
+  margin-left: 1.5rem;  /* samme som plass + margin */
 }
 
 .butikk{
@@ -294,7 +295,7 @@ padding-top: env(safe-area-inset-top);
   display: block;
   font-size: 0.85rem;
   color: #333;
-  margin-left: 2.7rem;  /* samme som plass + margin */
+  margin-left: 1.5rem;  /* samme som plass + margin */
 }
 
 .meter{
