@@ -260,6 +260,7 @@ function hentUkensKupp() {
   return sortert.length ? sortert[0] : null;
 }
 
+
 // ===============================
 // UI: Toppliste
 // ===============================
@@ -307,6 +308,9 @@ function visToppliste() {
         ` : ""}
 
         <div class="detaljinfo">
+
+    
+
           <div class="spec-table">
             <div class="spec-row">
               <span class="spec-label">Lag</span>
@@ -326,6 +330,13 @@ function visToppliste() {
             </div>
           </div>
 
+          <div class="tech-section">
+  <div class="tech-toggle">
+  <span>Tekniske detaljer</span>
+  <span class="chevron">⌄</span>
+</div>
+
+  <div class="tech-content">
           <div class="spec-divider"></div>
 
           <div class="spec-table">
@@ -380,6 +391,13 @@ function visToppliste() {
     });
 
     ul.appendChild(li);
+
+   li.querySelector(".tech-toggle")?.addEventListener("click", function(e){
+  e.stopPropagation();
+  const section = this.closest(".tech-section");
+  section.classList.toggle("open");
+});
+
   });
 }
 
