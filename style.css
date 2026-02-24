@@ -38,24 +38,16 @@ body::-webkit-scrollbar{ display:none; } /* Safari/Chrome */
    Sticky header (matcher din HTML: .header + switch)
 =================================== */
 .sticky-bar{
-  position: sticky;
-  top: 0;
-  z-index: 999;
-  background: rgba(242,242,242,0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding-top: env(safe-area-inset-top);
+position: sticky;
+top: 0;
+z-index: 999;
+background: rgba(242,242,242,0.92);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+padding-top: env(safe-area-inset-top);
 }
 
-.sticky-inner{
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
+
 
 .header h1{
   margin: 0;
@@ -389,6 +381,8 @@ body::-webkit-scrollbar{ display:none; } /* Safari/Chrome */
   z-index: 999;
   background: transparent;
   padding-top: env(safe-area-inset-top);
+  align-items: center;
+  justify-content: center;
 }
 
 .sticky-inner{
@@ -396,43 +390,39 @@ body::-webkit-scrollbar{ display:none; } /* Safari/Chrome */
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-
-  /* samme look som kort */
   background: #fff;
   border-radius: 24px;
-  padding: 20px 14px;
-  margin: 0 0 14px 0;
+
+  padding: 24px 24px;   /* 👈 MER padding her */
+  margin: 0px 0px 20px;   /* 👈 litt meir luft ned */
+
   box-shadow: 0 6px 14px rgba(0,0,0,0.05);
 }
 
 .title{
   margin: 0;
-  font-size: 26px;
-  font-weight: 400;
-  letter-spacing: -0.2px;
+  font-size: 28px;
+  font-weight: 500;
 }
 
 .tagline{
-  margin: 4px 0 0;
-  font-size: 15px;
-  font-weight: 500;
-  opacity: 0.65;
-  letter-spacing: 0.1px;
+  margin: 0px 0 0;
+  font-size: 14px;
+  opacity: 0.6;
 }
 
 /* Toggle = ren, liten, passer inn i kort */
 .toggle{
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  gap: 6px;
 }
 
 .toggle-text{
-  font-size: 15px;
-  font-weight: 500;
-  color: #111;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
   opacity: 0.8;
 }
 
