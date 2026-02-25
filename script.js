@@ -197,10 +197,31 @@ function parseCSV(text) {
   return rows;
 }
 
-async function lastInnProdukterFraSheet() {
-  const res = await fetch(`${SHEET_CSV_URL}&t=${Date.now()}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Klarte ikke hente CSV fra Google Sheets");
-  const csvText = await res.text();
+ async function lastInnProdukterFraSheet() {
+
+  const CACHE_KEY = "rr_csv_cache_v1";
+  const CACHE_TIME_KEY = "rr_csv_cache_time_v1";
+  const MAX_AGE_MS = 60 * 60 * 1000; // 1 time
+
+  let csvText = null;
+
+  const cached = localStorage.getItem(CACHE_KEY);
+  const cachedTime = Number(localStorage.getItem(CACHE_TIME_KEY) || "0");
+  const isFresh = cached && (Date.now() - cachedTime) < MAX_AGE_MS;
+
+  if (isFresh) {
+    // 🚀 Bruk cache først (superrask)
+    csvText = cached;
+  } else {
+    // 🌍 Hent fra Google Sheets
+    const res = await fetch(SHEET_CSV_URL);
+    if (!res.ok) throw new Error("Klarte ikke hente CSV fra Google Sheets");
+    csvText = await res.text();
+
+    // 💾 Lagre i cache
+    localStorage.setItem(CACHE_KEY, csvText);
+    localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+  }
 
   const grid = parseCSV(csvText).filter(r => r.some(cell => String(cell).trim() !== ""));
   if (grid.length < 2) {
@@ -232,7 +253,6 @@ async function lastInnProdukterFraSheet() {
     }))
     .filter(d => d.pris !== null && d.meter !== null && d.lag !== null);
 
-  // ✅ DENNE var det du manglet:
   beregnScores(dopapirListe);
 }
 
@@ -379,16 +399,25 @@ function visToppliste() {
       </div>
     `;
 
-    li.addEventListener("click", () => {
-      document.querySelectorAll("#toppliste li").forEach(el => {
-        if (el !== li) el.classList.remove("åpen");
-      });
+   li.addEventListener("click", () => {
+  document.querySelectorAll("#toppliste li").forEach(el => {
+    if (el !== li) el.classList.remove("åpen");
+  });
 
-      li.classList.toggle("åpen");
+  const åpnet = li.classList.toggle("åpen");
 
-      // Vibrasjon fungerer på Android, ikke på iOS (ok å ha uansett)
-      if (navigator.vibrate) navigator.vibrate(30);
+  // 🎯 Track kun når produkt åpnes
+  if (åpnet) {
+    gtag('event', 'produkt_apnet', {
+      event_category: 'engagement',
+      event_label: d.navn,
+      value: Math.round(d.prisPer100m)
     });
+  }
+
+  // Vibrasjon fungerer på Android
+  if (navigator.vibrate) navigator.vibrate(30);
+});
 
     ul.appendChild(li);
 
@@ -421,7 +450,7 @@ function visUkensKupp() {
 
         ${ukensKupp.bilde ? `
           <div class="ukens-bilde">
-            <img src="${ukensKupp.bilde}" alt="${ukensKupp.navn}">
+            <img src="${ukensKupp.bilde}" alt="${ukensKupp.navn}" loading="lazy" decoding="async">
           </div>
         ` : ""}
 
@@ -476,6 +505,13 @@ function visSistOppdatert() {
 // ===============================
 document.getElementById("tilbudToggle")?.addEventListener("change", function () {
   bareTilbud = this.checked;
+
+  // 🔥 Google Analytics event
+  gtag('event', 'bare_tilbud_toggle', {
+    event_category: 'engagement',
+    event_label: this.checked ? 'på' : 'av'
+  });
+
   visToppliste();
   visUkensKupp();
 });
