@@ -449,10 +449,17 @@ function visUkensKupp() {
       <div class="ukens-venstre">
 
         ${ukensKupp.bilde ? `
-          <div class="ukens-bilde">
-            <img src="${ukensKupp.bilde}" alt="${ukensKupp.navn}" loading="lazy" decoding="async">
-          </div>
-        ` : ""}
+  <div class="ukens-bilde">
+    <img
+      src="${ukensKupp.bilde}"
+      alt="${ukensKupp.navn}"
+      loading="lazy"
+      decoding="async"
+      width="200"
+      height="200"
+    >
+  </div>
+` : ""}
 
         <div class="ukens-label">UKENS KUPP</div>
         <div class="ukens-navn">${ukensKupp.navn}</div>
@@ -489,21 +496,9 @@ function visUkensKupp() {
 // ===============================
 // Sist oppdatert
 // ===============================
-function visSistOppdatert() {
-  const dato = new Date().toLocaleDateString("no-NO", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
-
-  document.getElementById("sist-oppdatert").innerText =
-    `Sist oppdatert: ${dato}`;
-}
-
-// ===============================
-// Toggle knapp
-// ===============================
 document.getElementById("tilbudToggle")?.addEventListener("change", function () {
+  const y = window.scrollY;   // ✅ husk scrollposisjon
+
   bareTilbud = this.checked;
 
   // 🔥 Google Analytics event
@@ -514,6 +509,9 @@ document.getElementById("tilbudToggle")?.addEventListener("change", function () 
 
   visToppliste();
   visUkensKupp();
+
+  // ✅ tilbake til samme scrollposisjon (hindrer "hopp" på mobil)
+  requestAnimationFrame(() => window.scrollTo(0, y));
 });
 
 // ===============================
