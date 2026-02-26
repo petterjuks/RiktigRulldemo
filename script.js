@@ -444,53 +444,74 @@ function visUkensKupp() {
 
   const harTilbud = erTilbud(ukensKupp);
 
-  container.innerHTML = `
-    <div class="ukens-wrapper">
-      <div class="ukens-venstre">
-
-        ${ukensKupp.bilde ? `
-  <div class="ukens-bilde">
-    <img
-      src="${ukensKupp.bilde}"
-      alt="${ukensKupp.navn}"
-      loading="lazy"
-      decoding="async"
-      width="200"
-      height="200"
-    >
-  </div>
-` : ""}
-
-        <div class="ukens-label">UKENS KUPP</div>
-        <div class="ukens-navn">${ukensKupp.navn}</div>
-        <div class="ukens-butikk">${ukensKupp.butikk.toUpperCase()}</div>
-
-       
-      </div>
-
-      <div class="ukens-høyre">
-        ${harTilbud ? `
-          <div class="rabatt-badge">
-            -${(ukensKupp.rabattProsent * 100).toFixed(0)}%
+  // ✅ Bygg strukturen kun første gang
+  if (!container.dataset.mounted) {
+    container.dataset.mounted = "1";
+    container.innerHTML = `
+      <div class="ukens-wrapper">
+        <div class="ukens-venstre">
+          <div class="ukens-bilde" style="display:none;">
+            <img alt="" loading="lazy" decoding="async" width="200" height="200">
           </div>
-        ` : ""}
 
-        ${harTilbud ? `
-          <div class="for-pris">
-            ${ukensKupp.forPris.toFixed(2)} kr
-          </div>
-        ` : ""}
-
-        <div class="nå-pris">
-          ${ukensKupp.pris.toFixed(2)} kr
+          <div class="ukens-label">UKENS KUPP</div>
+          <div class="ukens-navn"></div>
+          <div class="ukens-butikk"></div>
         </div>
 
-        <div class="meter">
-          ${ukensKupp.prisPer100m.toFixed(2)} kr / 100m
+        <div class="ukens-høyre">
+          <div class="rabatt-badge" style="display:none;"></div>
+          <div class="for-pris" style="display:none;"></div>
+          <div class="nå-pris"></div>
+          <div class="meter"></div>
         </div>
       </div>
-    </div>
-  `;
+    `;
+  }
+
+  // ✅ Oppdater kun innhold (ingen blinking)
+  container.querySelector(".ukens-navn").textContent = ukensKupp.navn;
+  container.querySelector(".ukens-butikk").textContent = ukensKupp.butikk.toUpperCase();
+  container.querySelector(".nå-pris").textContent = `${ukensKupp.pris.toFixed(2)} kr`;
+  container.querySelector(".meter").textContent = `${ukensKupp.prisPer100m.toFixed(2)} kr / 100m`;
+
+  const badge = container.querySelector(".rabatt-badge");
+  const forPrisEl = container.querySelector(".for-pris");
+
+  if (harTilbud) {
+    badge.style.display = "inline-block";
+    badge.textContent = `-${(ukensKupp.rabattProsent * 100).toFixed(0)}%`;
+
+    forPrisEl.style.display = "block";
+    forPrisEl.textContent = `${ukensKupp.forPris.toFixed(2)} kr`;
+  } else {
+    badge.style.display = "none";
+    forPrisEl.style.display = "none";
+  }
+
+  // ✅ Oppdater bilde uten å rive elementet
+  const bildeWrap = container.querySelector(".ukens-bilde");
+  const img = bildeWrap.querySelector("img");
+
+  if (ukensKupp.bilde) {
+    const newSrc = ukensKupp.bilde;
+
+    // Hvis samme bilde, gjør ingenting (hindrer “flash”)
+    if (img.getAttribute("src") !== newSrc) {
+      // Preload før vi bytter src
+      const pre = new Image();
+      pre.src = newSrc;
+
+      pre.onload = () => {
+        img.src = newSrc;
+        img.alt = ukensKupp.navn;
+      };
+    }
+
+    bildeWrap.style.display = "block";
+  } else {
+    bildeWrap.style.display = "none";
+  }
 }
 
 // ===============================
