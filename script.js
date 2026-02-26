@@ -323,7 +323,7 @@ function visToppliste() {
       <div class="detaljer">
         ${d.bilde ? `
           <div class="produktbilde">
-            <img src="${d.bilde}" alt="${d.navn}" loading="lazy">
+            <img src="${d.bilde}" alt="${d.navn}" loading="eager" decoding="async">
           </div>
         ` : ""}
 
@@ -541,6 +541,15 @@ document.getElementById("tilbudToggle")?.addEventListener("change", function () 
 (async function init() {
   try {
     await lastInnProdukterFraSheet();
+
+    // 🚀 PRELOAD alle bilder etter at de er hentet fra Sheet
+    const urls = [...new Set(dopapirListe.map(p => p.bilde).filter(Boolean))];
+
+    urls.forEach((url) => {
+      const img = new Image();
+      img.src = url;
+    });
+
   } catch (e) {
     console.error(e);
     document.getElementById("ukens-kupp").innerHTML =
